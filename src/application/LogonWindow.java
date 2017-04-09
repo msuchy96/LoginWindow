@@ -4,13 +4,10 @@ import java.util.Optional;
 
 import org.omg.CORBA.Environment;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
@@ -32,7 +29,7 @@ public class LogonWindow {
 		chosenEnvironment = LogonEnvironments.Test;
 	};
 
-	private static ImageView setPic() {
+	private static ImageView setPic(Dialog<Pair<Environment, String>> dialog) {
 		ImageView imgPic = new ImageView();
 		String path = "file:src/images/icon.png";
 		Image img = new Image(path);
@@ -40,10 +37,14 @@ public class LogonWindow {
 		imgPic.setFitHeight(100);
 		imgPic.setFitWidth(100);
 
+		// Get the Stage. and set
+		// Stage stage = (Stage) dialog.getDialogPane().getScene().getWindow();
+		// stage.getIcons().add(img);
+
 		return imgPic;
 	}
 
-	private GridPane setNewLayout(PasswordField fieldPassword) {
+	private GridPane setNewLayout(PasswordField fieldPassword, Node loginButton) {
 
 		GridPane grid = new GridPane();
 		grid.setHgap(10);
@@ -54,23 +55,49 @@ public class LogonWindow {
 		grid.add(fieldPassword, 2, 3);
 
 		ComboBox<LogonEnvironments> logEnvBox = setEnvironmentBox();
+		ComboBox<String> logUsernameBox = new ComboBox<>();
+		setUsernameBox(logEnvBox.getValue(), logUsernameBox);
 
 		grid.add(new Label("Environment:"), 1, 1);
 		grid.add(logEnvBox, 2, 1);
 
-		
-		
-
 		grid.add(new Label("Username:"), 1, 2);
-		grid.add(pickUsernameBox(logEnvBox.getValue()),2,2);
+		grid.add(logUsernameBox, 2, 2);
+
+		logEnvBox.setOnAction(e -> {
+			grid.getChildren().remove(logUsernameBox);
+			logUsernameBox.getItems().clear();
+			setUsernameBox(logEnvBox.getValue(), logUsernameBox);
+			grid.add(logUsernameBox, 2, 2);
+
+		});
+
+		logUsernameBox.setOnAction(e -> System.out.println("Raz"));
+
+	 logUsernameBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+			loginButton.setDisable((newValue == null) || 
+			logEnvBox.getValue() == null || 
+			fieldPassword.getText().trim().isEmpty());
+		});
+
+		logEnvBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+			loginButton.setDisable((newValue == null) ||
+			fieldPassword.getText().trim().isEmpty() || 
+			logUsernameBox.getValue() == null); 
+		});
+
 		
-		logEnvBox.setOnAction(e -> grid.add(pickUsernameBox(logEnvBox.getValue()), 2, 2));
+		fieldPassword.textProperty().addListener((observable, oldValue, newValue) -> {
+			loginButton.setDisable(newValue.trim().isEmpty() || 
+			logEnvBox.getValue() == null || 
+			logUsernameBox.getValue() == null);
+		});
+
+		loginButton.setDisable(true);
 
 		return grid;
 
 	}
-
-
 
 	private ComboBox<LogonEnvironments> setEnvironmentBox() {
 
@@ -82,19 +109,16 @@ public class LogonWindow {
 
 	}
 
+	private void setUsernameBox(LogonEnvironments logonEnvironments, ComboBox<String> comboBox) {
 
-	private ComboBox<String> pickUsernameBox(LogonEnvironments logonEnvironments) {
-
-		ComboBox<String> comboBox = new ComboBox<>();
-
-			if(logonEnvironments != null)
-			for(int i=0; i<logonEnvironments.getCount();i++)
+		if (logonEnvironments != null) {
+			for (int i = 0; i < logonEnvironments.getCount(); i++)
 				comboBox.getItems().add(logonEnvironments.getText(i));
 
-		
-		
+			System.out.println("Jestem tu2!");
+		}
+
 		comboBox.setEditable(true);
-		return comboBox;
 
 	}
 
@@ -104,18 +128,19 @@ public class LogonWindow {
 
 		dialog.setHeaderText(givenText);
 
-		dialog.setGraphic(setPic());
+		dialog.setGraphic(setPic(dialog));
 
 		ButtonType loginButtonType = new ButtonType("Login", ButtonData.OK_DONE);
 		dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
 
 		Node loginButton = dialog.getDialogPane().lookupButton(loginButtonType);
-		loginButton.setDisable(true);
 
 		PasswordField password = new PasswordField();
 		password.setPromptText("Password");
 
-		dialog.getDialogPane().setContent(setNewLayout(password));
+		// Do some validation (using the Java 8 lambda syntax).
+
+		dialog.getDialogPane().setContent(setNewLayout(password, loginButton));
 	}
 
 	public Optional<Pair<Environment, String>> showAndWait() {
