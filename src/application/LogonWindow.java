@@ -3,13 +3,11 @@ package application;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
@@ -22,6 +20,13 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.util.Pair;
 
+/**
+ * Class which implements public method showAndWait, allowing user to display a LogonDialog.
+ *
+ * 
+ * @author Maciej Suchocki / msuchock@stud.elka.pw.edu.pl
+ *
+ */
 public class LogonWindow {
 
 	private String givenTitle;
@@ -31,6 +36,14 @@ public class LogonWindow {
 	private String username;
 	private String password;
 
+	/**
+	 * Public constructor of this class allows creating an instance of it.
+	 * 
+	 * @param title
+	 *            window label
+	 * @param text
+	 *            header text
+	 */
 	public LogonWindow(String title, String text) {
 
 		givenTitle = title;
@@ -39,6 +52,13 @@ public class LogonWindow {
 
 	};
 
+	/**
+	 * Image setter.
+	 * 
+	 * @param dialog
+	 *            main window container
+	 * @return Icon container.
+	 */
 	private static ImageView setPic(Dialog<Pair<Environment, String>> dialog) {
 		ImageView imgPic = new ImageView();
 		String path = "file:src/images/icon.png";
@@ -47,19 +67,74 @@ public class LogonWindow {
 		imgPic.setFitHeight(100);
 		imgPic.setFitWidth(100);
 
-		// Get the Stage. and set
-		// Stage stage = (Stage) dialog.getDialogPane().getScene().getWindow();
-		// stage.getIcons().add(img);
-
 		return imgPic;
 	}
+	
+	/**
+	 * EnvironmentBox setter.
+	 * 
+	 * @return ChoiceBox with all environments set up.
+	 */
+	private ChoiceBox<Environment> setEnvironmentBox() {
 
+		listChoice = new ArrayList<Environment>();
+		listChoice.add(Environment.Production);
+		listChoice.add(Environment.Test);
+		listChoice.add(Environment.Development);
+
+		ObservableList<Environment> itemsChoice = FXCollections.observableList(listChoice);
+
+		ChoiceBox<Environment> choiceBox = new ChoiceBox<>(itemsChoice);
+
+		choiceBox.setPrefWidth(230);
+
+		return choiceBox;
+
+	}
+
+	/**
+	 * UsernameBox setter.
+	 * 
+	 * @param clickedEnvironment
+	 *            environment which was clicked in order to set proper usernames
+	 *            in usernameBox
+	 * @param logUsernameBox
+	 *            usernameBox to be set up
+	 */
+	private void setUsernameBox(Environment clickedEnvironment, ComboBox<String> logUsernameBox) {
+
+		pickedEnvironment = clickedEnvironment;
+		List<String> listUsername = new ArrayList<>();
+
+		for (int i = 0; i < clickedEnvironment.getCount(); i++) {
+			listUsername.add(clickedEnvironment.getText(i));
+		}
+
+		ObservableList<String> itemsUsername = FXCollections.observableList(listUsername);
+
+		logUsernameBox.getItems().clear();
+
+		logUsernameBox.setItems(itemsUsername);
+
+		logUsernameBox.setDisable(false);
+
+		logUsernameBox.setEditable(true);
+
+	}
+
+	/**
+	 * Layout and action setter.
+	 * 
+	 * @param loginButton
+	 *            container with button which you clicked to sign in
+	 * @return Ready layout with all elements set up.
+	 */
 	private GridPane setNewLayout(Node loginButton) {
 
 		GridPane grid = new GridPane();
 		grid.setHgap(10);
 		grid.setVgap(10);
-		grid.setPadding(new Insets(20, 150, 10, 10));
+		grid.setPadding(new Insets(20, 20, 20, 20));
 
 		PasswordField fieldPassword = new PasswordField();
 		fieldPassword.setPromptText("Password");
@@ -86,28 +161,48 @@ public class LogonWindow {
 		return grid;
 
 	}
-	private void resetAndDisplayMessage(PasswordField fieldPassword, ComboBox<String> logUsernameBox)
-	{
+
+	/**
+	 * Method which is called when user dosen't exist or password is invalid. It clears password and username field then displays a message about error.
+	 * 
+	 * @param fieldPassword
+	 *            container where user enters the password
+	 * @param logUsernameBox
+	 *            container where user enters username or select from existing
+	 *            usernames
+	 */
+	private void resetAndDisplayMessage(PasswordField fieldPassword, ComboBox<String> logUsernameBox) {
 		fieldPassword.textProperty().setValue("");
-		password=fieldPassword.textProperty().toString();
+		password = fieldPassword.textProperty().toString();
 		logUsernameBox.valueProperty().set("");
-		username = logUsernameBox.valueProperty().toString();
+		username = "";
+		logUsernameBox.setValue(null);
 		fieldPassword.setPromptText("Wrong password or user doesn't exist!");
 	}
-	
 
+	/**
+	 * Method which listens for actions and changes.
+	 * 
+	 * @param logUsernameBox
+	 *            container where user enters username or select from existing usernames
+	 * @param logEnvBox
+	 *            container where user select from existing environments
+	 * @param fieldPassword
+	 *            container where user enters the password
+	 * @param loginButton
+	 *            container with button which you clicked to sign in
+	 */
 	private void addListeners(ComboBox<String> logUsernameBox, ChoiceBox<Environment> logEnvBox,
 			PasswordField fieldPassword, Node loginButton) {
 
-		
 		loginButton.addEventFilter(ActionEvent.ACTION, (event) -> {
 			if (!authenticated()) {
 				event.consume();
-				resetAndDisplayMessage(fieldPassword,logUsernameBox);
-				
+				resetAndDisplayMessage(fieldPassword, logUsernameBox);
+
 			}
 		});
-		
+
 		logEnvBox.setOnAction(e -> {
 
 			setUsernameBox(logEnvBox.getValue(), logUsernameBox);
@@ -135,44 +230,16 @@ public class LogonWindow {
 
 	}
 
-	private ChoiceBox<Environment> setEnvironmentBox() {
+	
 
-		listChoice = new ArrayList<Environment>();
-		listChoice.add(Environment.Production);
-		listChoice.add(Environment.Test);
-		listChoice.add(Environment.Development);
-
-		ObservableList<Environment> itemsChoice = FXCollections.observableList(listChoice);
-
-		ChoiceBox<Environment> choiceBox = new ChoiceBox<>(itemsChoice);
-
-		choiceBox.setPrefWidth(230);
-
-		return choiceBox;
-
-	}
-
-	private void setUsernameBox(Environment clickedEnvironment, ComboBox<String> logUsernameBox) {
-
-		pickedEnvironment = clickedEnvironment;
-		List<String> listUsername = new ArrayList<>();
-
-		for (int i = 0; i < clickedEnvironment.getCount(); i++) {
-			listUsername.add(clickedEnvironment.getText(i));
-		}
-
-		ObservableList<String> itemsUsername = FXCollections.observableList(listUsername);
-
-		logUsernameBox.getItems().clear();
-
-		logUsernameBox.setItems(itemsUsername);
-
-		logUsernameBox.setDisable(false);
-
-		logUsernameBox.setEditable(true);
-
-	}
-
+	/**
+	 * Sets basic dialog properties and calls other methods.
+	 * 
+	 * @param dialog
+	 *            main window container
+	 * @param loginButton
+	 *            container with button which you clicked to sign in
+	 */
 	void setDialogProperties(Dialog<Pair<Environment, String>> dialog, Node loginButton) {
 
 		dialog.setTitle(givenTitle);
@@ -182,8 +249,49 @@ public class LogonWindow {
 		dialog.setGraphic(setPic(dialog));
 
 		dialog.getDialogPane().setContent(setNewLayout(loginButton));
+
 	}
 
+	/**
+	 * Checks if user typed valid password and username.
+	 * 
+	 * @return bollean which tells if authentication was successful
+	 */
+	private boolean authenticated() {
+
+		if (contains(username)) {
+			if (password.equals(UserPassword.valueOf(username).toString()))
+				return true;
+			else
+				return false;
+
+		} else
+			return false;
+	}
+
+	/**
+	 * Checks if typed user exists.
+	 * 
+	 * @param test
+	 *            typed username
+	 * @return Bollean which tells if user exist.
+	 */
+	private static boolean contains(String test) {
+
+		for (UserPassword u : UserPassword.values()) {
+			if (u.name().equals(test)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Calls all methods which create dialog window.
+	 * 
+	 * @return Environment and username as pair or empty optional.
+	 */
 	public Optional<Pair<Environment, String>> showAndWait() {
 
 		Dialog<Pair<Environment, String>> dialog = new Dialog<>();
@@ -194,11 +302,8 @@ public class LogonWindow {
 
 		Node loginButton = dialog.getDialogPane().lookupButton(loginButtonType);
 
-		
-		
 		setDialogProperties(dialog, loginButton);
-		
-		
+
 		dialog.setResultConverter(button -> {
 			if (button == loginButtonType)
 
@@ -216,29 +321,6 @@ public class LogonWindow {
 		else
 			return result;
 
-	}
-
-	private boolean authenticated() {
-
-		if (contains(username)) {
-			if (password.equals(UserPassword.valueOf(username).toString()))
-				return true;
-			else
-				return false;
-
-		} else // nie ma takiego username
-			return false;
-	}
-
-	public static boolean contains(String test) {
-
-		for (UserPassword u : UserPassword.values()) {
-			if (u.name().equals(test)) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 }
