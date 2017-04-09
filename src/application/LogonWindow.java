@@ -175,9 +175,6 @@ public class LogonWindow {
 
 		dialog.setGraphic(setPic(dialog));
 
-		
-
-
 		dialog.getDialogPane().setContent(setNewLayout(loginButton));
 	}
 
@@ -199,10 +196,19 @@ public class LogonWindow {
 				return new Pair<Environment, String>(pickedEnvironment, "Nothing");
 			else 
 				return null;
-		});
+			
+			});
 		
-		Optional<Pair<Environment, String>> result = dialog.showAndWait();
-		return result;
+		
+		
+			Optional<Pair<Environment, String>> result = dialog.showAndWait();
+
+
+			if(result == null)
+				return Optional.empty();
+			else 
+				return result;
+			
 		
 
 	}
