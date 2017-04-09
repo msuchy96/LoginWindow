@@ -1,12 +1,12 @@
 package application;
 
-public enum LogonEnvironments {
+public enum Environment{
 
 	/**
 	 * Enum which contains all predefined icons.
 	 * 
 	 */
-	Test("msuchock", "ssawicki", "mwisniewski"), Developer("azamojski", "rsawicki", "pkaminski"), Generative("kbidus", "tmurawski", "sszymborski");
+	Test("msuchock", "ssawicki", "mwisniewski"), Development("azamojski", "rsawicki", "pkaminski"), Production("kbidus", "tmurawski", "sszymborski");
 	private String[] text = new String[3];
 	private int count;
 	
@@ -16,7 +16,7 @@ public enum LogonEnvironments {
 	 * @param msg
 	 *            String argument which is copied as new icon file name in enum
 	 */
-	LogonEnvironments(String... msg) {
+	Environment(String... msg) {
 		for (int i = 0; i < msg.length; ++i)
 			text[i] = msg[i];
 
