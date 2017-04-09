@@ -28,7 +28,7 @@ public class LogonWindowTest extends Application {
 	/**
 	 * Calls constructor of LogonWindow and displays on console pair environment,username if login was successful or Logon Canceled if was canceled.
 	 * 
-	 * @param arg0
+	 * @param primaryStage
 	 *            Instance of Stage which was automatically created by JavaFX.
 	 */
 	@Override

@@ -1,12 +1,13 @@
 package application;
 
+/**
+ * Enum which contains all predefined environments.
+ * 
+ * @author Maciej Suchocki / msuchock@stud.elka.pw.edu.pl
+ */
 public enum Environment {
 
-	/**
-	 * Enum which contains all predefined environments.
-	 * 
-	 * @author Maciej Suchocki / msuchock@stud.elka.pw.edu.pl
-	 */
+	
 	Test("msuchock", "ssawicki", "mwisniewski"), Development("azamojski", "rsawicki", "pkaminski"), Production("kbidus", "tmurawski", "sszymborski");
 	private String[] text = new String[3];
 	private int count;
