@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
@@ -27,20 +28,17 @@ public class LogonWindow {
 	private String givenText;
 	private List<Environment> listChoice;
 	private Environment pickedEnvironment;
-	
-	
+	private String username;
+	private String password;
+
 	public LogonWindow(String title, String text) {
-		
+
 		givenTitle = title;
 		givenText = text;
-		
-		
+		username = "";
+
 	};
 
-	
-	
-	
-	
 	private static ImageView setPic(Dialog<Pair<Environment, String>> dialog) {
 		ImageView imgPic = new ImageView();
 		String path = "file:src/images/icon.png";
@@ -63,109 +61,117 @@ public class LogonWindow {
 		grid.setVgap(10);
 		grid.setPadding(new Insets(20, 150, 10, 10));
 
-		
 		PasswordField fieldPassword = new PasswordField();
 		fieldPassword.setPromptText("Password");
-		
+
 		grid.add(new Label("Password:"), 1, 3);
 		grid.add(fieldPassword, 2, 3);
 
 		ChoiceBox<Environment> logEnvBox = setEnvironmentBox();
-		
+
 		ComboBox<String> logUsernameBox = new ComboBox<>();
 		logUsernameBox.setDisable(true);
-		logUsernameBox.setPrefWidth(150);
-		
+		logUsernameBox.setPrefWidth(230);
+
 		grid.add(new Label("Environment:"), 1, 1);
 		grid.add(logEnvBox, 2, 1);
 
 		grid.add(new Label("Username:"), 1, 2);
 		grid.add(logUsernameBox, 2, 2);
-		
-		addListeners(logUsernameBox,logEnvBox,fieldPassword,loginButton);
-	 
+
+		addListeners(logUsernameBox, logEnvBox, fieldPassword, loginButton);
+
 		loginButton.setDisable(true);
 
 		return grid;
 
 	}
-	
-	private void addListeners(ComboBox<String> logUsernameBox, ChoiceBox<Environment> logEnvBox, PasswordField fieldPassword, Node loginButton)
+	private void resetAndDisplayMessage(PasswordField fieldPassword, ComboBox<String> logUsernameBox)
 	{
+		fieldPassword.textProperty().setValue("");
+		password=fieldPassword.textProperty().toString();
+		logUsernameBox.valueProperty().set("");
+		username = logUsernameBox.valueProperty().toString();
+		fieldPassword.setPromptText("Wrong password or user doesn't exist!");
+	}
+	
+
+	private void addListeners(ComboBox<String> logUsernameBox, ChoiceBox<Environment> logEnvBox,
+			PasswordField fieldPassword, Node loginButton) {
+
+		
+		loginButton.addEventFilter(ActionEvent.ACTION, (event) -> {
+			if (!authenticated()) {
+				event.consume();
+				resetAndDisplayMessage(fieldPassword,logUsernameBox);
+				
+			}
+		});
 		
 		logEnvBox.setOnAction(e -> {
-			
+
 			setUsernameBox(logEnvBox.getValue(), logUsernameBox);
 
 		});
-		
+
 		logUsernameBox.valueProperty().addListener((observable, oldValue, newValue) -> {
 			loginButton.setDisable(
-					(newValue == null) || 
-					logEnvBox.getValue() == null || 
-					fieldPassword.getText().trim().isEmpty());
+					(newValue == null) || logEnvBox.getValue() == null || fieldPassword.getText().trim().isEmpty());
+			username = newValue;
 		});
 
 		logEnvBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-			loginButton.setDisable(
-					(newValue == null) ||
-					fieldPassword.getText().trim().isEmpty() || 
-					logUsernameBox.getValue() == null); 
+			loginButton.setDisable((newValue == null) || fieldPassword.getText().trim().isEmpty()
+					|| logUsernameBox.getValue() == null);
+
 		});
 
-		
 		fieldPassword.textProperty().addListener((observable, oldValue, newValue) -> {
 			loginButton.setDisable(
-					newValue.trim().isEmpty() || 
-					logEnvBox.getValue() == null || 
-					logUsernameBox.getValue() == null);
+					newValue.trim().isEmpty() || logEnvBox.getValue() == null || logUsernameBox.getValue() == null);
+			password = newValue;
+
 		});
-		
+
 	}
 
 	private ChoiceBox<Environment> setEnvironmentBox() {
 
-		
 		listChoice = new ArrayList<Environment>();
 		listChoice.add(Environment.Production);
 		listChoice.add(Environment.Test);
 		listChoice.add(Environment.Development);
-		
+
 		ObservableList<Environment> itemsChoice = FXCollections.observableList(listChoice);
-		
+
 		ChoiceBox<Environment> choiceBox = new ChoiceBox<>(itemsChoice);
-		
-		choiceBox.setPrefWidth(150);
-		
+
+		choiceBox.setPrefWidth(230);
+
 		return choiceBox;
-		
-	}
-	
-	private void setUsernameBox(Environment clickedEnvironment, ComboBox<String> logUsernameBox)
-	{
-		
-		pickedEnvironment = clickedEnvironment;
-		List<String> listUsername = new ArrayList<>();
-		
-		for(int i=0; i<clickedEnvironment.getCount();i++)
-		{
-			listUsername.add(clickedEnvironment.getText(i));
-		}
-		
-		ObservableList<String>itemsUsername = FXCollections.observableList(listUsername);
-		
-		
-		logUsernameBox.getItems().clear();
-		
-		logUsernameBox.setItems(itemsUsername);
-		
-		logUsernameBox.setDisable(false);
-		
-		logUsernameBox.setEditable(true);
-		
+
 	}
 
-	
+	private void setUsernameBox(Environment clickedEnvironment, ComboBox<String> logUsernameBox) {
+
+		pickedEnvironment = clickedEnvironment;
+		List<String> listUsername = new ArrayList<>();
+
+		for (int i = 0; i < clickedEnvironment.getCount(); i++) {
+			listUsername.add(clickedEnvironment.getText(i));
+		}
+
+		ObservableList<String> itemsUsername = FXCollections.observableList(listUsername);
+
+		logUsernameBox.getItems().clear();
+
+		logUsernameBox.setItems(itemsUsername);
+
+		logUsernameBox.setDisable(false);
+
+		logUsernameBox.setEditable(true);
+
+	}
 
 	void setDialogProperties(Dialog<Pair<Environment, String>> dialog, Node loginButton) {
 
@@ -182,35 +188,57 @@ public class LogonWindow {
 
 		Dialog<Pair<Environment, String>> dialog = new Dialog<>();
 
-
 		ButtonType loginButtonType = new ButtonType("Login", ButtonData.OK_DONE);
-		ButtonType cancelButtonType = new ButtonType("Cancel",ButtonData.CANCEL_CLOSE);
+		ButtonType cancelButtonType = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
 		dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, cancelButtonType);
 
 		Node loginButton = dialog.getDialogPane().lookupButton(loginButtonType);
+
 		
-		setDialogProperties(dialog,loginButton);
+		
+		setDialogProperties(dialog, loginButton);
+		
 		
 		dialog.setResultConverter(button -> {
-			if(button == loginButtonType)
-				return new Pair<Environment, String>(pickedEnvironment, "Nothing");
-			else 
+			if (button == loginButtonType)
+
+				return new Pair<Environment, String>(pickedEnvironment, username);
+
+			else
 				return null;
-			
-			});
-		
-		
-		
-			Optional<Pair<Environment, String>> result = dialog.showAndWait();
 
+		});
 
-			if(result == null)
-				return Optional.empty();
-			else 
-				return result;
-			
-		
+		Optional<Pair<Environment, String>> result = dialog.showAndWait();
 
+		if (result == null)
+			return Optional.empty();
+		else
+			return result;
+
+	}
+
+	private boolean authenticated() {
+
+		if (contains(username)) {
+			if (password.equals(UserPassword.valueOf(username).toString()))
+				return true;
+			else
+				return false;
+
+		} else // nie ma takiego username
+			return false;
+	}
+
+	public static boolean contains(String test) {
+
+		for (UserPassword u : UserPassword.values()) {
+			if (u.name().equals(test)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 }
